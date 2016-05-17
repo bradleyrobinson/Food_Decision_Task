@@ -10,7 +10,7 @@ class Example(Frame):
         Frame.__init__(self, parent)
 
         self.parent = parent
-        self.date = (time.strftime("%m/%d/%Y"))
+        self.date = (time.strftime("%m_%d_%Y"))
         self.initUI()
 
 

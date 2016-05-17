@@ -73,7 +73,7 @@ class Participant:
         # After getting that info, let's make sure that we know what type of data we'll record,
         # passed by the user, reaction time must be called "RT"
         self.data_cols = data_cols
-        self.fileID = self.participant_num
+        self.fileID = self.date + self.participant_num
 
         # Now, let's pass the information to the data file that we will write
         self.file = makedata.DataSheet(self.data_cols, self.participant_num, self.fileID)
