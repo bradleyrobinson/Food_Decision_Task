@@ -473,6 +473,32 @@ def word_wrap(txt, screen_width):
     return txt_list
 
 
+def image_description(screen, size, food_image, description):
+    end = False
+    x = size[0]/2
+    y = size[1]/2
+    while not end:
+        for event in pygame.event.get():
+            if event.type == pygame.KEYDOWN:
+                end = True
+                if event.key == pygame.K_ESCAPE:
+                    pygame.quit()
+        picture = pygame.image.load(food_image)
+        text = font.render(description, 1, BLACK)
+        # Get the image position
+        image_rect = picture.get_rect()
+        x_pos1 = x - image_rect[2] / 2
+        y_pos1 = y - image_rect[3] / 2
+        # Get the text position based on its size
+        x_pos2 = x - font.size(description)[0] / 2
+        y_pos2 = y_pos1 + 20
+        # Blit the images now
+        screen.blit(picture, (x_pos1, y_pos1))
+        screen.blit(text, [x_pos2, y_pos2])
+
+        pygame.display.flip()
+
+
 def describe_task(instruction_list, screen, size):
     x = size[0] / 2
     y = size[1] / 2
@@ -510,8 +536,17 @@ def procedure(screen, size, participant):
                            'You will be asked to rate each one based on your general preference for that food item.',
                            'The scale is from one to nine, where one means you do not prefer the food and nine means you highly prefer the food.',
                            'Use the number keys at the top of the keyboard to input your rating.',
-                           'The images are to illustrate the food item, however, bear in mind your preference in general for that food.']
+                           'The images are to illustrate the food item, however, bear in mind your preference in general for that food.',
+                           'For example... ']
     describe_task(rating_instructions, screen, size)
+    cake_images = [os.path.join('examples', 'chocolate cake.jpg'), os.path.join('examples', 'cake2.jpg'),
+                   os.path.join('examples', 'cake3.jpg')]
+    image_description(screen, size, cake_images[0], 'Chocolate Cake')
+    describe_task(['Is the same as: '], screen, size)
+    image_description(screen, size, cake_images[1], 'Chocolate Cake')
+    describe_task(["Or..."], screen, size)
+    image_description(screen, size, cake_images[2], 'Chocolate Cake')
+    describe_task(['What is important is how you generally like the food.', 'Let the experimenter know if you are ready to continue'], screen, size)
     # Here be the rating task
     rating_task(participant, screen, size)
     # Here be the resting state part:
