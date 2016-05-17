@@ -289,23 +289,26 @@ def prep_screen(screen, size, c_food, d_food, participant):
     # Declaration of images
     pict1 = pygame.image.load(get_path("decision", file_foods[c_food.title()]))
     pict2 = pygame.image.load(get_path("decision", file_foods[d_food.title()]))
+    # Images of buttons:
+    button_image_0 = pygame.image.load("button_0.png")
+    button_image_1 = pygame.image.load("button_1.png")
     # Declaration of text
-    food_text_1 = font.render(c_food, 1, BLACK)
+    food_text_1 = font.render(c_food.title(), 1, BLACK)
     c_description = font.render(cooperate, 1, BLACK)
     c_press = font.render(c_button, 1, BLACK)
-    food_text_2 = font.render(d_food, 1, BLACK)
+    food_text_2 = font.render(d_food.title(), 1, BLACK)
     d_description = font.render(defect, 1, BLACK)
     d_press = font.render(d_button, 1, BLACK)
     money_text = font.render(money, 1, BLACK)
     wait_text = font.render(wait, 1, BLACK)
     # Declaration of location variables
     x = size[0] - pict2.get_rect()[2] - 100
-    t_1pos = [(50 + (pict1.get_rect()[2] - font.size(c_food)[0]) / 2), pict1.get_rect()[3] + 90]
-    t_cpos = [(50 + (pict1.get_rect()[2] - font.size(cooperate)[0]) / 2), t_1pos[1] - 30]
-    t_1b = [(50 + (pict1.get_rect()[2] - font.size(c_button)[0]) / 2), t_1pos[1] + 30]
-    t_2pos = [(x + (pict2.get_rect()[2] - font.size(d_food)[0]) / 2), pict2.get_rect()[3] + 90]
-    t_dpos = [(x + (pict2.get_rect()[2] - font.size(defect)[0]) / 2), t_2pos[1] - 30]
-    t_2b = [(x + (pict2.get_rect()[2] - font.size(c_button)[0]) / 2), t_2pos[1] + 30]
+    t_1pos = [(50 + (pict1.get_rect()[2] - font.size(c_food)[0]) / 2), pict1.get_rect()[3] + 100]
+    t_cpos = [(50 + (pict1.get_rect()[2] - font.size(cooperate)[0]) / 2), t_1pos[1] - 40]
+    t_1b = [(50 + (pict1.get_rect()[2] - font.size(c_button)[0]) / 2), t_1pos[1] + 40]
+    t_2pos = [(x + (pict2.get_rect()[2] - font.size(d_food)[0]) / 2), pict2.get_rect()[3] + 100]
+    t_dpos = [(x + (pict2.get_rect()[2] - font.size(defect)[0]) / 2), t_2pos[1] - 40]
+    t_2b = [(x + (pict2.get_rect()[2] - font.size(c_button)[0]) / 2), t_2pos[1] + 40]
     wait_pos = [(size[0] - font.size(wait)[0])/2, size[1]/2]
     # Timing variables
     c = timing.stimTime()
@@ -321,13 +324,16 @@ def prep_screen(screen, size, c_food, d_food, participant):
         screen.blit(food_text_1, t_1pos)
         screen.blit(c_description, t_cpos)
         screen.blit(c_press, t_1b)
+        screen.blit(button_image_1, [t_1b[0], t_1b[1] + 40])
         screen.blit(pict2, [x, 50])
         screen.blit(food_text_2, t_2pos)
         screen.blit(d_press, t_2b)
+        screen.blit(button_image_0, [t_2b[0], t_2b[1] + 40])
         screen.blit(d_description, t_dpos)
         screen.blit(money_text, [((size[0]/2) - (font.size(money)[0]/2)), 10])
         screen.blit(wait_text, wait_pos)
         pygame.display.flip()
+    return t_1b[0], t_2b[0]
 
 
 def get_decision():
@@ -347,7 +353,7 @@ def get_decision():
 
 
 # Simply says: 'choose', giving the participant 2 seconds to respond based on the previous image
-def choice_screen(screen, size, participant, c_food, d_food, length=2000, training=False):
+def choice_screen(screen, size, participant, c_food, d_food, button_pos_1, button_pos_0, length=2000, training=False):
     end = False
     decision = "none"
     y = size[1] / 2
@@ -359,11 +365,16 @@ def choice_screen(screen, size, participant, c_food, d_food, length=2000, traini
             c.stim_end()
             time_passed = c.get_rt()
             screen.fill(WHITE)
+
             text = font.render("Choose", 1, BLACK)
+            button_0 = font.render("Press 0", 1, BLACK)
+            button_1 = font.render("Press 1", 1, BLACK)
+
             # This gives us the actual center position for the text we want to print
             x = (size[0] - font.size("Choose")[0])/2
             screen.blit(text, [x, y])
-
+            screen.blit(button_0, [button_pos_0, y])
+            screen.blit(button_1, [button_pos_1, y])
             pygame.display.flip()
             end, decision = get_decision()
         if decision == "none" and not training:
@@ -395,7 +406,7 @@ def outcome_screen(screen, size, participant, c_food, d_food):
                        ". ~n The total cost this trial was: $" + str(cost) +
                        " ~n The current amount of money left in the account is $" + str(participant.money)], screen, size)
     else:
-        describe_task(["Your opponent chose the less expensive option:" + d_food +
+        describe_task(["Your opponent chose the less expensive option: " + d_food +
                        ". ~n The total cost this trial was: $" + str(cost) +
                        " ~n The current amount of money left in the account is $" + str(participant.money)], screen, size)
 
@@ -427,9 +438,9 @@ def decision_task(screen, size, participant, training=False, trials=20):
         # 2-second ISI
         isi(2000, participant, screen, size)
         # 6-second window prep screen (what do you want to choose),
-        prep_screen(screen, size, c_food, d_food, participant)
+        button_pos_1, button_pos_0 = prep_screen(screen, size, c_food, d_food, participant)
         # A choice screen, where they have 2 s, progresses when they press the button
-        choice_screen(screen, size, participant, c_food, d_food, training=training)
+        choice_screen(screen, size, participant, c_food, d_food, button_pos_1, button_pos_0, training=training)
         # 2-second ISI
         isi(2000, participant, screen, size)
         # Outcome screen
@@ -491,7 +502,7 @@ def image_description(screen, size, food_image, description):
         y_pos1 = y - image_rect[3] / 2
         # Get the text position based on its size
         x_pos2 = x - font.size(description)[0] / 2
-        y_pos2 = y_pos1 + 20
+        y_pos2 = y_pos1 + image_rect[3] + 20
         # Blit the images now
         screen.blit(picture, (x_pos1, y_pos1))
         screen.blit(text, [x_pos2, y_pos2])
@@ -561,13 +572,14 @@ def procedure(screen, size, participant):
                              "Before each trial, your options will be presented for a time, as displayed in the following frame: "]
     describe_task(decision_instructions, screen, size)
     # Display the prep_screen as demonstration of the task
-    prep_screen(screen, size, "apple", "asparagus", participant)
+    button_position_1, button_position_0 = prep_screen(screen, size, "apple", "asparagus", participant)
     # Introduce the choice screen
     describe_task(["After which you will see the choice screen: "], screen, size)
     # Display the choice screen to demonstrate the task
-    choice_screen(screen, size, participant, "apple", "food", training=True)
+    choice_screen(screen, size, participant, "apple", "food", button_position_1, button_position_0, training=True)
     # Continue the explanation.
     describe_task(["In the choice screen, you will have 2-3 seconds to decide based on the options given in the previous screen.",
+                   'Use 1 and 0 at the top of the keyboard to input your decision.'
                    "Following this screen, your partner's decision and the round's outcome will be displayed.",
                    "The round will continue until the card is out of money or until task completion."],
                   screen, size)
@@ -583,7 +595,7 @@ def procedure(screen, size, participant):
     decision_task(screen, size, participant, trials=20, training=False)
     isi(3000, participant, screen, size)
     # Rating task again
-    describe_task(["This next text will have you rate food items, as you did before",
+    describe_task(["The following screen will have you rate food items, as you did before",
                    "Please respond quickly"], screen, size)
     rating_task(participant, screen, size)
     describe_task(["Thanks! That's all!"], screen, size)
