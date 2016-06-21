@@ -11,7 +11,10 @@ pygame.init()
 Here be constants
 -------------------------------------------------------------------------------------------------------------------"""
 font = pygame.font.SysFont("arial", 34)
+bold_font = pygame.font.SysFont("arial", 46)
 WHITE = (255, 255, 255)
+RED = (255, 0, 0)
+GREEN = (0, 255, 0)
 BLACK = (0, 0, 0)
 # And here be the images that we'll be rating
 file_foods = {}
@@ -285,7 +288,7 @@ def prep_screen(screen, size, c_food, d_food, participant):
     defect = "Cost: 6.00"
     d_button = "Press 0"
     money = "Account Balance: " + str(participant.money)
-    wait = "Wait..."
+    wait = "WAIT..."
     # Declaration of images
     pict1 = pygame.image.load(get_path("decision", file_foods[c_food.title()]))
     pict2 = pygame.image.load(get_path("decision", file_foods[d_food.title()]))
@@ -300,7 +303,7 @@ def prep_screen(screen, size, c_food, d_food, participant):
     d_description = font.render(defect, 1, BLACK)
     d_press = font.render(d_button, 1, BLACK)
     money_text = font.render(money, 1, BLACK)
-    wait_text = font.render(wait, 1, BLACK)
+    wait_text = bold_font.render(wait, 1, RED)
     # Declaration of location variables
     x = size[0] - pict2.get_rect()[2] - 100
     t_1pos = [(50 + (pict1.get_rect()[2] - font.size(c_food)[0]) / 2), pict1.get_rect()[3] + 100]
@@ -366,7 +369,7 @@ def choice_screen(screen, size, participant, c_food, d_food, button_pos_1, butto
             time_passed = c.get_rt()
             screen.fill(WHITE)
 
-            text = font.render("Choose", 1, BLACK)
+            text = bold_font.render("CHOOSE", 1, GREEN)
             button_0 = font.render("Press 0", 1, BLACK)
             button_1 = font.render("Press 1", 1, BLACK)
 
@@ -402,11 +405,11 @@ def outcome_screen(screen, size, participant, c_food, d_food):
     elif participant.last_trial == 'P':
         cost = 12.00
     if participant.ai_decision == 'c':
-        describe_task(["Your opponent chose the more expensive option: " + c_food +
+        describe_task(["Your opponent chose the less expensive option: " + c_food +
                        ". ~n The total cost this trial was: $" + str(cost) +
                        " ~n The current amount of money left in the account is $" + str(participant.money)], screen, size)
     else:
-        describe_task(["Your opponent chose the less expensive option: " + d_food +
+        describe_task(["Your opponent chose the more expensive option: " + d_food +
                        ". ~n The total cost this trial was: $" + str(cost) +
                        " ~n The current amount of money left in the account is $" + str(participant.money)], screen, size)
 
@@ -566,25 +569,28 @@ def procedure(screen, size, participant):
     # Describes the task
     decision_instructions = ["For this next task, you will play with another partner.",
                              "You and your partner receive a gift card that allows you and your partner to buy meals at a food court.",
-                             "On each trial your partner and you decide which item to purchase independently. ",
+                             "The card lasts for a limited period of time, after which it will expire and all extra money will be lost. ",
+                             "On each trial your partner and you decide one food item to purchase. ",
                              "You will find out what your partner has selected after you both decide.",
-                             "In this game, your objective is to spend as much money as possible without spending more than is on the card.",
                              "Before each trial, your options will be presented for a time, as displayed in the following frame: "]
     describe_task(decision_instructions, screen, size)
     # Display the prep_screen as demonstration of the task
     button_position_1, button_position_0 = prep_screen(screen, size, "apple", "asparagus", participant)
     # Introduce the choice screen
-    describe_task(["After which you will see the choice screen: "], screen, size)
+    describe_task(["During this screen do not press any keys, but decide which item you will choose.",
+                   "You will then see the choice screen, where you will be able to enter your choice. ",
+                   "Example:"], screen, size)
     # Display the choice screen to demonstrate the task
     choice_screen(screen, size, participant, "apple", "food", button_position_1, button_position_0, training=True)
     # Continue the explanation.
     describe_task(["In the choice screen, you will have 2-3 seconds to decide based on the options given in the previous screen.",
-                   'Use 1 and 0 at the top of the keyboard to input your decision.'
+                   'Use 1 or 0 at the top of the keyboard to input your decision.',
                    "Following this screen, your partner's decision and the round's outcome will be displayed.",
-                   "The round will continue until the card is out of money or until task completion."],
+                   "The game will continue until the card is out of money or until task completion.",
+                   "You want the money to last through all the trials while having as a little as possible left.",
+                   "The next five trials will be for practice only. Continue when ready. "],
                   screen, size)
     # Training for the decision task
-    describe_task(["The next five trials will be for practice only. Continue when ready. "], screen, size)
     decision_task(screen, size, participant, trials=5, training=True)
     # Here's where we'll actually record the data
     describe_task(["That concludes the practice trials.",
