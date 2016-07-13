@@ -41,14 +41,22 @@ class Example(Frame):
         self.frame3 = Frame(self)
         self.frame3.pack(fill=X)
 
-        self.accept = Button(self.frame3, text="Ok", command=self.makeVariables)
+        self.lbl3 = Label(self.frame3, text="COM Port", width=10)
+        self.lbl3.pack(side=LEFT, padx=5, pady=5)
+
+        self.entry3 = Entry(self.frame3)
+        self.entry3.pack(fill=X, padx=5, expand=True)
+
+        self.frame4 = Frame(self)
+        self.frame4.pack(fill=X)
+
+        self.accept = Button(self.frame4, text="Ok", command=self.makeVariables)
         self.accept.pack(fill=X, padx=5)
 
 
     def makeVariables(self):
         self.participant = self.entry1.get()
-        print self.participant
-        print self.date
+        self.port = self.entry3.get()
         self.verify()
         Frame.quit(self)
 
@@ -63,6 +71,9 @@ class Example(Frame):
 
     def getDate(self):
         return self.date
+
+    def get_port(self):
+        return self.port
 
 class Escape(Frame):
     def __init__(self, parent):

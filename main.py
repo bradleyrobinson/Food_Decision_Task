@@ -6,6 +6,7 @@ import os
 import csv
 import random
 from pygame.locals import *
+import serial
 pygame.init()
 """ ---------------------------------------------------------------------------------------------------------------
 Here be constants
@@ -72,6 +73,10 @@ class Participant:
         self.app = review.getParticipant()
         self.participant_num = self.app.getName()
         self.date = self.app.getDate()
+        # We need to connect with the Emotiv software, and to do so we need to connect with the port.
+        # The experimenter enters the port number (on the opposite end of the port that Emotiv uses)
+        self.port_name = self.app.get_port()
+        self.port = serial.Serial(self.port_name, 38400)
 
         # After getting that info, let's make sure that we know what type of data we'll record,
         # passed by the user, reaction time must be called "RT"
@@ -111,9 +116,13 @@ class Participant:
     # The next two functions allow us to get data needed for the reaction time
     def stim_start(self, marker=None):
         self.experiment_rt.stim_start()
+        if marker is not None:
+            self.port.write(marker)
 
     def stim_end(self, marker=None):
         self.experiment_rt.stim_end()
+        if marker is not None:
+            self.port.write(marker)
 
     # This can be called at the end of each trial, which helps make up a list that is put into the csv file after the
     #
@@ -246,14 +255,14 @@ def rating_task(participant, screen, size):
         done = False
         text = font.render(key, 1, BLACK)
         response = 0
-        participant.stim_start()
+        participant.stim_start(marker='R')
         while not done:
             # This gets the user's response
             response, done = get_rating()
             if response == 'end':
                 pygame.quit()
             if done:
-                participant.stim_end()
+                participant.stim_end(marker=str(response))
             screen.fill(WHITE)
             # We create the image based on the list of foods
             picture = pygame.image.load(get_path("rating", file_foods[key])).convert()
