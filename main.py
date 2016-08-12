@@ -8,6 +8,16 @@ import random
 from pygame.locals import *
 import serial
 pygame.init()
+
+
+""" TODO:
+- List the markers here!
+- Add the resting state
+- Make sure that the data is recording properly
+
+"""
+
+
 """ ---------------------------------------------------------------------------------------------------------------
 Here be constants
 -------------------------------------------------------------------------------------------------------------------"""
@@ -37,23 +47,13 @@ def make_opponent(trials, cooperation_rate, opponent):
     for defect in range(0, (trials - cooperation_rate)):
         opponent.append('d')
 
-make_opponent(20, 6, opponent_a)
+make_opponent(20, 6, opponent_c)
 make_opponent(20, 10, opponent_b)
-make_opponent(20, 14, opponent_c)
+make_opponent(20, 14, opponent_a)
 random.shuffle(opponent_a)
 random.shuffle(opponent_b)
 random.shuffle(opponent_c)
-"""classes that we'll need:
-Participant class
-- This is where the file is held where we write the decisions that the participant has made
-- This also includes the list of rated items
-- Whenever a participant makes a decision, a marker needs to be sent to the EEG recording equipment
-- We also need to send the data to a list
-- In initialization, this class also makes sure that the EEG equipment is receiving the signal
-- For testing purposes, it will allow participants to
-- Also reminds the experimenter to set the marker on the EEG software
-- We also need to call the TKL library to have a prompt, which will ask the experimenter the participant number
-"""
+
 
 class RatedFood:
     def __init__(self, food, rating):
@@ -181,12 +181,14 @@ class Participant:
             self.categories.append(category)
 
 
-# Inter-stimuli interval, which is played for a set amount of time, and then continues on
-def isi(length, participant, screen, size):
+# Inter-stimuli interval, which is played for a set amount of time
+def isi(length, participant, screen, size, mark_start=False, mark_end=False):
     c = timing.stimTime()
     time_passed = 0
     x = size[0]/2
     y = size[1]/2
+    if mark_start:
+        participant.stim_start(marker="1")
     while time_passed < length:
         temp, end = get_decision()
         if end == 'end':
@@ -198,7 +200,8 @@ def isi(length, participant, screen, size):
         screen.fill(WHITE)
         screen.blit(text, [x, y])
         pygame.display.flip()
-    participant.stim_end(marker="I")
+    if mark_end:
+        participant.stim_end(marker="0")
 
 
 def get_rating():
@@ -251,18 +254,20 @@ def get_path(task, file_name):
 def rating_task(participant, screen, size):
     # Gets the center
     x = size[0] / 2
+    # Marker:2 = Start rating task
+    participant.stim_start(marker="2")
     for key in file_foods:
         done = False
         text = font.render(key, 1, BLACK)
         response = 0
-        participant.stim_start(marker='R')
+        
         while not done:
             # This gets the user's response
             response, done = get_rating()
             if response == 'end':
                 pygame.quit()
             if done:
-                participant.stim_end(marker=str(response))
+                participant.stim_end()
             screen.fill(WHITE)
             # We create the image based on the list of foods
             picture = pygame.image.load(get_path("rating", file_foods[key])).convert()
@@ -285,12 +290,14 @@ def rating_task(participant, screen, size):
                     "Decision": "NA", "Opponent Decision": "NA"}
         participant.record_trial(decision)
         participant.rated_food(key, response)
+    # Marker:C = End rating task
+    participant.stim_start(marker="C")
     # When we're done rating the objects, we need to sort the ratings into different groups, depending on how high
     # the ratings are.
     participant.sort_ratings()
 
 
-def prep_screen(screen, size, c_food, d_food, participant):
+def prep_screen(screen, size, c_food, d_food, participant, training=False):
     # Declaration of string variables
     cooperate = "Cost: 3.00"
     c_button = "Press 1"
@@ -325,6 +332,12 @@ def prep_screen(screen, size, c_food, d_food, participant):
     # Timing variables
     c = timing.stimTime()
     time_passed = 0
+
+    # Marker:D = Start prep_screen
+    if not training:
+        participant.stim_start(marker="D")
+
+    # Loops for given time so the participant sees the choice they will have
     while time_passed < 4000:
         c.stim_end()
         time_passed = c.get_rt()
@@ -369,7 +382,9 @@ def choice_screen(screen, size, participant, c_food, d_food, button_pos_1, butto
     end = False
     decision = "none"
     y = size[1] / 2
-    participant.stim_start()
+    # Marker:3 choice start
+    if not training:
+        participant.stim_start(marker="3")
     while decision == "none":
         c = timing.stimTime()
         time_passed = 0
@@ -400,12 +415,37 @@ def choice_screen(screen, size, participant, c_food, d_food, button_pos_1, butto
         participant.opponent_decision(opponent_a, decision)
         trial_result = {"Food Rated": "NA", "Food Rating": "NA", "Trial Food C": c_food, "Trial Food D": d_food,
                         "Decision": decision, "Opponent Decision": participant.ai_decision}
-        participant.stim_end()
+        # Marker:4 = Cooperate
+        # Marker:5 = Defect
+        # Marker:6 = No decision
+        if decision == 'C':
+            marker = "4"
+        elif decision == 'D':
+            marker = "5"
+        else:
+            marker = "6"
+        participant.stim_end(marker=marker)
         participant.record_trial(trial_result)
 
+def get_outcome_marker(participant):
+    # Marker:7 = Reward
+    # Marker:8 = Sucker
+    # Marker:9 =  Temptation
+    # Marker:A = Punishment
+    if participant.last_trial == 'R':
+        marker = "7"
+    elif participant.last_trial == 'S':
+        marker = "8"
+    elif participant.last_trial == 'T':
+        marker = "9"
+    elif participant.last_trial == 'P':
+        marker = "A"
+    return marker
 
-# This produces the outcome of the trial
-def outcome_screen(screen, size, participant, c_food, d_food):
+# This prints the outcome of the trial onto the screen, as well as sending the proper marker record the outcome of the trial.
+def outcome_screen(screen, size, participant, c_food, d_food, training=False):
+    if not training:
+        participant.stim_start(marker=get_outcome_marker(participant))
     cost = 0
     if participant.last_trial == 'S' or participant.last_trial == 'T':
         cost = 9.00
@@ -421,6 +461,7 @@ def outcome_screen(screen, size, participant, c_food, d_food):
         describe_task(["Your opponent chose the more expensive option: " + d_food +
                        ". ~n The total cost this trial was: $" + str(cost) +
                        " ~n The current amount of money left in the account is $" + str(participant.money)], screen, size)
+
 
 
 # This randomly selects an item off the list, and returns it
@@ -450,13 +491,13 @@ def decision_task(screen, size, participant, training=False, trials=20):
         # 2-second ISI
         isi(2000, participant, screen, size)
         # 6-second window prep screen (what do you want to choose),
-        button_pos_1, button_pos_0 = prep_screen(screen, size, c_food, d_food, participant)
+        button_pos_1, button_pos_0 = prep_screen(screen, size, c_food, d_food, participant, training=training)
         # A choice screen, where they have 2 s, progresses when they press the button
         choice_screen(screen, size, participant, c_food, d_food, button_pos_1, button_pos_0, training=training)
         # 2-second ISI
         isi(2000, participant, screen, size)
         # Outcome screen
-        outcome_screen(screen, size, participant, c_food, d_food)
+        outcome_screen(screen, size, participant, c_food, d_food, training=training)
         position += 1
     else:
         if participant.money < 0:
@@ -584,7 +625,7 @@ def procedure(screen, size, participant):
                              "Before each trial, your options will be presented for a time, as displayed in the following frame: "]
     describe_task(decision_instructions, screen, size)
     # Display the prep_screen as demonstration of the task
-    button_position_1, button_position_0 = prep_screen(screen, size, "apple", "asparagus", participant)
+    button_position_1, button_position_0 = prep_screen(screen, size, "apple", "asparagus", participant, training=True)
     # Introduce the choice screen
     describe_task(["During this screen do not press any keys, but decide which item you will choose.",
                    "You will then see the choice screen, where you will be able to enter your choice. ",
@@ -601,11 +642,15 @@ def procedure(screen, size, participant):
                   screen, size)
     # Training for the decision task
     decision_task(screen, size, participant, trials=5, training=True)
-    # Here's where we'll actually record the data
+
+    # Here, after the practice trials, we will have a resting state.
     describe_task(["That concludes the practice trials.",
-                   "There will be 15-25 rounds.",
+                   "During the game there will be 15-25 rounds.",
                    "You have two goals: 1) ~n Don't run out of money, ~n 2) Spend as much money before the last round. ",
-                   "If you have any questions, please ask the experimenter now. Continue when ready. "], screen, size)
+                   "If you have any questions, please ask the experimenter now. Continue when ready. ",
+                   "We will begin the game with a long resting period. Please keep your eyes directed towards the cross. Try to clear your mind. We are ready to begin the experiment, if you have any questions please ask the experimenter now."], screen, size)
+    isi(120000, participant, screen, size, mark_start=True, mark_end=True)
+    # Here's where we'll actually record the data
     participant.set_amount()
     decision_task(screen, size, participant, trials=20, training=False)
     isi(3000, participant, screen, size)
@@ -613,7 +658,10 @@ def procedure(screen, size, participant):
     describe_task(["The following screen will have you rate food items, as you did before",
                    "Please respond quickly"], screen, size)
     rating_task(participant, screen, size)
+    describe_task(["We will now have another resting period. Please keep your eyes directed towards the cross. Try to clear your mind."], screen, size)
+    isi(120000, participant, screen, size, mark_start=True, mark_end=True)
     describe_task(["Thanks! That's all!"], screen, size)
+    pygame.quit()
 
 
 # Here be the main thing
