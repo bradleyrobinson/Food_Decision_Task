@@ -15,6 +15,19 @@ pygame.init()
 - Add the resting state
 - Make sure that the data is recording properly
 
+ Marker:1 = Start rest
+ Marker:0 = End rest
+ Marker:2 = Start rating task
+ Marker:C = End rating task
+ Marker:D = Start prep_screen
+ Marker:3 choice start
+ Marker:4 = Cooperate
+ Marker:5 = Defect
+ Marker:6 = No decision
+ Marker:7 = Reward
+ Marker:8 = Sucker
+ Marker:9 =  Temptation
+ Marker:A = Punishment
 """
 
 
