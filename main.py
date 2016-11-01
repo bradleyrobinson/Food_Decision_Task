@@ -202,12 +202,10 @@ def isi(length, participant, screen, size, mark_start=False, mark_end=False, jit
     y = size[1]/2
     if mark_start:
         participant.stim_start(marker="1")
-
+    j_length = length
     if jitter == True:
         j_length = random.randrange(jitter_beg, length)
-    else:
-        j_length = length
-
+        
     while time_passed < j_length:
         temp, end = get_decision()
         if end == 'end':
@@ -219,6 +217,7 @@ def isi(length, participant, screen, size, mark_start=False, mark_end=False, jit
         screen.fill(WHITE)
         screen.blit(text, [x, y])
         pygame.display.flip()
+        
     if mark_end:
         participant.stim_end(marker="0")
 
@@ -630,12 +629,13 @@ def procedure(screen, size, participant):
     describe_task(["Or..."], screen, size)
     image_description(screen, size, cake_images[2], 'Chocolate Cake')
     describe_task(['What is important is how you generally like the food.', 'Let the experimenter know if you are ready to continue'], screen, size)
+    # ISI
+    describe_task(['Before the rating task, we will have a long resting period. Please keep your eyes directed towards the cross. Try to clear your mind. We are ready to begin the expirement, if you have any questions please ask the experimenter now.'], screen, size)
+    isi(60000, participant, screen, size, mark_start=True, mark_end=True)
     # Here be the rating task
     rating_task(participant, screen, size)
     # Here be the resting state part:
-    describe_ask(['Before the rating task, we will have a long resting period. Please keep your eyes directed towards the cross. Try to clear your mind. We are ready to begin the expirement, if you have any questions please ask the experimenter now.'], screen, size)
-    isi(60000, participant, screen, size, mark_start=True, mark_end=True)
-    # ISIs will be longer in experiment for EEG recording.
+    
     # Describes the task
     decision_instructions = ["For this next task, you will play with another partner.",
                              "You and your partner receive a gift card that allows you and your partner to buy meals at a food court.",
