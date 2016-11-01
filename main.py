@@ -60,9 +60,9 @@ def make_opponent(trials, cooperation_rate, opponent):
     for defect in range(0, (trials - cooperation_rate)):
         opponent.append('d')
 
-make_opponent(20, 6, opponent_c)
-make_opponent(20, 10, opponent_b)
-make_opponent(20, 14, opponent_a)
+make_opponent(24, 8, opponent_c)
+make_opponent(24, 12, opponent_b)
+make_opponent(24, 16, opponent_a)
 random.shuffle(opponent_a)
 random.shuffle(opponent_b)
 random.shuffle(opponent_c)
@@ -179,7 +179,7 @@ class Participant:
 
     # This is called after the training trials.
     def set_amount(self):
-        self.money = 120.00
+        self.money = 200.00
 
     def sort_ratings(self):
         # First sort the list of food objects
@@ -195,14 +195,20 @@ class Participant:
 
 
 # Inter-stimuli interval, which is played for a set amount of time
-def isi(length, participant, screen, size, mark_start=False, mark_end=False):
+def isi(length, participant, screen, size, mark_start=False, mark_end=False, jitter=False, jitter_beg=0):
     c = timing.stimTime()
     time_passed = 0
     x = size[0]/2
     y = size[1]/2
     if mark_start:
         participant.stim_start(marker="1")
-    while time_passed < length:
+
+    if jitter == True:
+        j_length = random.randrange(jitter_beg, length)
+    else:
+        j_length = length
+
+    while time_passed < j_length:
         temp, end = get_decision()
         if end == 'end':
             pygame.quit()
@@ -502,7 +508,7 @@ def decision_task(screen, size, participant, training=False, trials=20):
         # Get the food items
         c_food, d_food = get_decision_foods(participant, position)
         # 2-second ISI
-        isi(2000, participant, screen, size)
+        isi(2000, participant, screen, size, jitter=True, jitter_beg=1000)
         # 6-second window prep screen (what do you want to choose),
         button_pos_1, button_pos_0 = prep_screen(screen, size, c_food, d_food, participant, training=training)
         # A choice screen, where they have 2 s, progresses when they press the button
@@ -627,8 +633,9 @@ def procedure(screen, size, participant):
     # Here be the rating task
     rating_task(participant, screen, size)
     # Here be the resting state part:
+    describe_ask(['Before the rating task, we will have a long resting period. Please keep your eyes directed towards the cross. Try to clear your mind. We are ready to begin the expirement, if you have any questions please ask the experimenter now.'], screen, size)
+    isi(60000, participant, screen, size, mark_start=True, mark_end=True)
     # ISIs will be longer in experiment for EEG recording.
-    isi(1000, participant, screen, size)
     # Describes the task
     decision_instructions = ["For this next task, you will play with another partner.",
                              "You and your partner receive a gift card that allows you and your partner to buy meals at a food court.",
@@ -662,17 +669,16 @@ def procedure(screen, size, participant):
                    "You have two goals: 1) ~n Don't run out of money, ~n 2) Spend as much money before the last round. ",
                    "If you have any questions, please ask the experimenter now. Continue when ready. ",
                    "We will begin the game with a long resting period. Please keep your eyes directed towards the cross. Try to clear your mind. We are ready to begin the experiment, if you have any questions please ask the experimenter now."], screen, size)
-    isi(120000, participant, screen, size, mark_start=True, mark_end=True)
     # Here's where we'll actually record the data
     participant.set_amount()
-    decision_task(screen, size, participant, trials=20, training=False)
+    decision_task(screen, size, participant, trials=24, training=False)
     isi(3000, participant, screen, size)
     # Rating task again
     describe_task(["The following screen will have you rate food items, as you did before",
                    "Please respond quickly"], screen, size)
     rating_task(participant, screen, size)
     describe_task(["We will now have another resting period. Please keep your eyes directed towards the cross. Try to clear your mind."], screen, size)
-    isi(120000, participant, screen, size, mark_start=True, mark_end=True)
+    isi(60000, participant, screen, size, mark_start=True, mark_end=True)
     describe_task(["Thanks! That's all!"], screen, size)
     pygame.quit()
 
