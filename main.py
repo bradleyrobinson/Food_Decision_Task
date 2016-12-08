@@ -396,6 +396,7 @@ def get_decision():
 
 
 # Simply says: 'choose', giving the participant 2 seconds to respond based on the previous image
+# TODO: Make this screen last after the decision is made, so that it is a fixed window
 def choice_screen(screen, size, participant, c_food, d_food, button_pos_1, button_pos_0, length=2000, training=False):
     end = False
     decision = "none"
