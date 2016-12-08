@@ -510,6 +510,9 @@ def decision_task(screen, size, participant, training=False, trials=20):
         isi(2000, participant, screen, size, jitter=True, jitter_beg=1000)
         # 6-second window prep screen (what do you want to choose),
         button_pos_1, button_pos_0 = prep_screen(screen, size, c_food, d_food, participant, training=training)
+        # Short ISI
+        # TODO: Make sure markers are correct here!!!
+        isi(500, participant, screen, size, jitter=True, jitter_beg=250)
         # A choice screen, where they have 2 s, progresses when they press the button
         choice_screen(screen, size, participant, c_food, d_food, button_pos_1, button_pos_0, training=training)
         # 2-second ISI
