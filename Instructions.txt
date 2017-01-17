@@ -1,0 +1,20 @@
+How to run the experiment:
+With the experiment there are two ways you might have to run it. 
+But before you look at the specific instructions, make sure you set up the COM on TestBench:
+
+In terms of setting up TestBench, make sure you select COM11 (for the soundbooth room) or COM13 (for the main lab room). The library that
+is in use communicates from one port to another, so make sure you select the corresponding one.
+
+I. Python 2.7 is the default, you only have to click on main.py in the folder food_decision_task_master. Then input the correct COM
+in the text field (i.e. the soundbooth room needs COM9, the main room needs COM8)
+
+
+II. Python 3.5 is the default, so it is more complex! Follow these instructions or it will crash:
+1. Open the command line
+2. Type: activate py27
+This opens up the environment in py2.7, which is what the task uses
+3. Move to the correct folder. So type cd c:/users/lab/desktop/food_task
+4. Now type: python main.py
+5. It should run!
+
+Input the participant number, don't mess with the date, and put COM8 or COM9 depending on the computer.
