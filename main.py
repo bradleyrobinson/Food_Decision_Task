@@ -1,3 +1,24 @@
+"""
+Author: Bradley Robinson
+
+Food decision task experimental procedure. Requires a serial port to be initialized,
+which can be started with the com0com application.
+
+The task involves three phases:
+1. Food rating task. Here the participant is presented with 59 food items and their
+images, one at a time, and asked to rate them on a scale from 1-9. This makes it
+easier to bin each of the items.
+2. Decision task. The participant is asked to choose an expensive or cheap food item,
+which affects both them and a partner (which is actually the computer). If they choose
+the cheaper (and less preferred) item, that is considered cooperation, and the opposite
+is defection.
+3. Post task food rating. The participant, just as before, rates each item again.
+
+Data is saved in the data folder as a csv.
+
+This requires the use of PyGame, which has not been ported to Python 3. This means that
+it may not function properly if Python 3 is used.
+"""
 import pygame
 import review
 import timing
@@ -10,10 +31,8 @@ import serial
 pygame.init()
 
 
-""" TODO:
-- List the markers here!
-- Add the resting state
-- Make sure that the data is recording properly
+"""
+Markers:
 
  Marker:1 = Start rest
  Marker:0 = End rest
@@ -30,34 +49,38 @@ pygame.init()
  Marker:A = Punishment
 """
 
-
-""" ---------------------------------------------------------------------------------------------------------------
-Here be constants
--------------------------------------------------------------------------------------------------------------------"""
 font = pygame.font.SysFont("arial", 34)
 bold_font = pygame.font.SysFont("arial", 46)
 WHITE = (255, 255, 255)
 RED = (255, 0, 0)
 GREEN = (0, 255, 0)
 BLACK = (0, 0, 0)
-# And here be the images that we'll be rating
+# Collects the name of the images that we will be using
 file_foods = {}
 with open('fooditems.csv') as csvfile:
     food_reader = csv.DictReader(csvfile, delimiter=',', quotechar='|')
     for row in food_reader:
         file_foods[row['title'].title()] = row['file']
 
-# This creates lists for the opponent decisions, then populates and shuffles them to randomize computer response
+# This creates lists for the opponent decisions, then populates and
+# shuffles them to randomize computer response
 opponent_a = []
 opponent_b = []
 opponent_c = []
-practice_opponent = ['c', 'c','d','c', 'c']
+practice_opponent = ['c', 'c', 'd', 'c', 'c']
 
 
 def make_opponent(trials, cooperation_rate, opponent):
-    for cooperate in range(0, cooperation_rate):
+    """Generates an opponent based on a cooperation rate
+
+    Parameters:
+        trials: int, maximum number of trials
+        cooperation_rate: int, number of times that the opponent will cooperate
+        opponent: list, must be empty.
+    """
+    for _ in range(0, cooperation_rate):
         opponent.append('c')
-    for defect in range(0, (trials - cooperation_rate)):
+    for _ in range(0, (trials - cooperation_rate)):
         opponent.append('d')
 
 make_opponent(24, 8, opponent_c)
@@ -67,20 +90,37 @@ random.shuffle(opponent_a)
 random.shuffle(opponent_b)
 random.shuffle(opponent_c)
 
-
 class RatedFood:
+    """
+    Small data structure that allows the user to store the food and its rating
+
+    It is not pythonic at all, but to maintain consistency it will remain so
+    for the time being
+
+    Variables:
+        self.food: str, represents the food being used
+        self.rating: int, number for the user's rating of the food
+    """
     def __init__(self, food, rating):
         self.food = food
         self.rating = rating
 
     def get_rating(self):
+        """Unpythonic function that returns the object's rating
+        """
         return self.rating
 
     def get_food(self):
+        """Unpythonic function that returns the name of the food item,
+        """
         return self.rating
 
 
 class Participant:
+    """
+    Participant object, stores data about the participant and writes that to
+    a file.
+    """
     def __init__(self, data_cols):
         # This calls a function that allows us to put in the participant name in a GUI window
         self.app = review.getParticipant()
@@ -174,8 +214,6 @@ class Participant:
         elif result == 'Dd':
             self.last_trial = 'P'
             self.money -= 12.00
-        else:
-            print "Something went terribly wrong, master!"
 
     # This is called after the training trials.
     def set_amount(self):
